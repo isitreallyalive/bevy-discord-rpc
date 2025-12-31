@@ -1,12 +1,13 @@
 use bevy::prelude::*;
-use discord_presence::Client as DiscordClient;
 
-#[derive(Resource)]
-struct Client(DiscordClient);
+pub use crate::client::RpcEvent;
+use crate::client::{Client, EventQueue};
+
+mod client;
 
 #[non_exhaustive]
 pub struct DiscordRpcPlugin {
-    client_id: u64
+    client_id: u64,
 }
 
 impl DiscordRpcPlugin {
@@ -18,7 +19,10 @@ impl DiscordRpcPlugin {
 impl Plugin for DiscordRpcPlugin {
     fn build(&self, app: &mut App) {
         // instantiate the client
-        let client = Client(DiscordClient::new(self.client_id));
-        app.insert_resource(client);
+        app.insert_resource(Client::new(self.client_id))
+            .insert_resource(EventQueue::default())
+            .add_message::<RpcEvent>()
+            .add_systems(Startup, client::startup)
+            .add_systems(Update, client::drain_events);
     }
 }
