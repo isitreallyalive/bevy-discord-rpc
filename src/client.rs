@@ -1,10 +1,10 @@
-use std::sync::Arc;
+use std::{sync::Arc};
 
 use bevy::{platform::sync::Mutex, prelude::*};
 use discord_presence::models::EventData;
 use quork::traits::list::ListVariants;
 
-use crate::{DefaultActivity, RpcActivity, RpcEvent};
+use crate::RpcEvent;
 
 // todo: handle discord client shutdowns
 #[derive(Resource, Deref, DerefMut)]
@@ -12,6 +12,13 @@ pub(crate) struct Client {
     #[deref]
     inner: discord_presence::Client,
     ready: bool,
+}
+
+#[derive(Resource, bon::Builder, Debug, Clone, Default)]
+#[non_exhaustive]
+pub struct Activity {
+    #[builder(into)]
+    pub state: String,
 }
 
 /// A queue of Discord events to be processed by Bevy
@@ -31,10 +38,7 @@ impl Client {
 }
 
 /// Initialise the Discord RPC client
-pub(crate) fn startup(
-    mut client: ResMut<Client>,
-    event_queue: ResMut<EventQueue>,
-) {
+pub(crate) fn startup(mut client: ResMut<Client>, event_queue: ResMut<EventQueue>) {
     // forward all events to bevy
     for event in discord_presence::Event::VARIANTS {
         client
@@ -54,24 +58,24 @@ pub(crate) fn startup(
 
 pub(crate) fn apply_activity(
     mut client: ResMut<Client>,
-    default_activity: Option<Res<DefaultActivity>>,
-    mut commands: Commands,
-    mut reader: MessageReader<RpcActivity>,
+    mut has_changed: Local<bool>,
+    activity: If<Res<Activity>>,
 ) {
-    if !client.ready {
+    // we need to cache whether the activity has changed in case the client isn't ready yet
+    if activity.is_changed() {
+        *has_changed = true;
+    }
+
+    // only apply if the client is ready and the activity has changed
+    if !client.ready || !*has_changed {
         return;
     }
 
-    // apply the default activity if it exists
-    if let Some(activity) = default_activity {
-        _ = activity.apply(&mut client);
-        commands.remove_resource::<DefaultActivity>();
-    }
-
-    // apply any queued activities
-    for activity in reader.read() {
-        _ = activity.apply(&mut client);
-    }
+    let _ = client.set_activity(|mut a| {
+        a.state = Some(activity.state.to_string());
+        a
+    });
+    *has_changed = false;
 }
 
 /// Drain queued events into bevy
@@ -81,13 +85,16 @@ pub(crate) fn drain_events(
     mut client: ResMut<Client>,
 ) {
     _ = queue.lock().as_mut().map(|queued| {
-        queued.drain(..).for_each(|e| {
-            // if we get a ready event, mark the client as ready
-            if matches!(e, EventData::Ready { .. }) {
-                client.ready = true;
+        queued.drain(..).for_each(|event| {
+            match event {
+                // connection established, so mark the client as ready
+                EventData::Ready(_) => client.ready = true,
+                // errors are bad, the client is probably disconnected
+                EventData::Error(_) => client.ready = false,
+                _ => {}
             }
 
-            writer.write(RpcEvent(e));
+            writer.write(RpcEvent(event));
         })
     });
 }

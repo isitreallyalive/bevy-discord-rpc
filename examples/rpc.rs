@@ -1,10 +1,15 @@
 use bevy::prelude::*;
-use bevy_discord_rpc::{DiscordRpcPlugin, RpcActivity, RpcEvent};
+use bevy_discord_rpc::{Activity, DiscordRpcPlugin, RpcEvent};
 
 fn read_events(mut events: MessageReader<RpcEvent>) {
     for event in events.read() {
         println!("{:?}", event);
     }
+}
+
+fn update_activity(mut activity: ResMut<Activity>, time: Res<Time>) {
+    let elapsed = time.elapsed_secs() as u64;
+    activity.state = format!("uptime: {}s", elapsed);
 }
 
 fn main() {
@@ -17,15 +22,9 @@ fn main() {
 
     App::new()
         .add_plugins(MinimalPlugins)
-        .add_plugins(
-            DiscordRpcPlugin::builder(client_id)
-                .default_activity(
-                    RpcActivity::builder()
-                        .state("Testing out bevy-discord-rpc")
-                        .build(),
-                )
-                .build(),
-        )
+        .add_plugins(DiscordRpcPlugin::builder(client_id).activity(Activity::builder().state("uptime: 0s").build()).build())
         .add_systems(Update, read_events)
+        .add_systems(FixedUpdate, update_activity)
+        .insert_resource(Time::from_seconds(1.))
         .run();
 }
