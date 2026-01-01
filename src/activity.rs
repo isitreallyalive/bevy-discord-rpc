@@ -1,7 +1,36 @@
+use std::{
+    time::{SystemTime, SystemTimeError, UNIX_EPOCH},
+};
+
 use bevy::prelude::*;
 use discord_presence::models::{
     ActivityAssets, ActivityParty, ActivitySecrets, ActivityTimestamps,
 };
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Timestamps {
+    start: Option<u64>,
+    end: Option<u64>,
+}
+
+impl Timestamps {
+    pub fn now() -> Result<Self, SystemTimeError> {
+        let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+        Ok(Self {
+            start: Some(now),
+            end: None,
+        })
+    }
+}
+
+impl From<Timestamps> for ActivityTimestamps {
+    fn from(timestamps: Timestamps) -> Self {
+        ActivityTimestamps {
+            start: timestamps.start,
+            end: timestamps.end,
+        }
+    }
+}
 
 #[derive(bon::Builder, Clone, Debug, Default)]
 #[builder(on(String, into))]
@@ -14,7 +43,7 @@ pub struct ActivityData {
     /// What the player is currently doing
     pub details: Option<String>,
     /// Helps create elapsed/remaining timestamps on a player's profile
-    pub timestamps: Option<ActivityTimestamps>,
+    pub timestamps: Option<Timestamps>,
     /// Assets to display on the player's profile
     pub assets: Option<ActivityAssets>,
     /// Information about the player's party

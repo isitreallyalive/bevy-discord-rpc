@@ -1,14 +1,14 @@
 use bevy::prelude::*;
 use discord_presence::models::EventData;
 pub use discord_presence::models::{
-    ActivityAssets, ActivityParty, ActivitySecrets, ActivityTimestamps, ActivityType, DisplayType,
+    ActivityAssets, ActivityParty, ActivitySecrets, ActivityType, DisplayType,
 };
 
 use crate::{
     activity::ActivityData,
     client::{Client, EventQueue},
 };
-pub use activity::Activity;
+pub use activity::{Activity, Timestamps};
 
 mod activity;
 mod client;

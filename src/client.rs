@@ -73,7 +73,7 @@ pub(crate) fn apply_activity(
         }
         a.state = activity.state.clone();
         a.details = activity.details.clone();
-        a.timestamps = activity.timestamps.clone();
+        a.timestamps = activity.timestamps.map(Into::into);
         a.assets = activity.assets.clone();
         a.party = activity.party.clone();
         a.secrets = activity.secrets.clone();

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_discord_rpc::{Activity, DiscordRpcPlugin, RpcEvent};
+use bevy_discord_rpc::{Activity, DiscordRpcPlugin, RpcEvent, Timestamps};
 
 fn read_events(mut events: MessageReader<RpcEvent>) {
     for event in events.read() {
@@ -15,7 +15,7 @@ fn update_activity(mut activity: ResMut<Activity>, time: Res<Time>) {
     });
 }
 
-fn main() {
+fn main() -> Result<()> {
     let client_id = std::env::var("APPLICATION_ID")
         .map(|id| {
             id.parse::<u64>()
@@ -31,6 +31,7 @@ fn main() {
                     Activity::builder()
                         .state("hello from bevy-discord-rpc")
                         .details("uptime: 0m")
+                        .timestamps(Timestamps::now()?)
                         .build(),
                 )
                 .build(),
@@ -41,4 +42,6 @@ fn main() {
         .add_systems(FixedUpdate, update_activity)
         .insert_resource(Time::from_seconds(60.))
         .run();
+    
+    Ok(())
 }
