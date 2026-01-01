@@ -1,8 +1,8 @@
 use bevy::prelude::*;
-use discord_presence::models::EventData;
 pub use discord_presence::models::{
     ActivityAssets, ActivityParty, ActivitySecrets, ActivityType, DisplayType,
 };
+use discord_presence::{Event, models::EventData};
 
 use crate::{
     activity::ActivityData,
@@ -21,8 +21,11 @@ pub struct DiscordRpcPlugin {
     activity: Option<ActivityData>,
 }
 
-#[derive(Message, Debug, Deref, DerefMut)]
-pub struct RpcEvent(EventData);
+#[derive(Message, Debug)]
+pub struct RpcEvent {
+    event: Event,
+    data: EventData,
+}
 
 impl Plugin for DiscordRpcPlugin {
     fn build(&self, app: &mut App) {

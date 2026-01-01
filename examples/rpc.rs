@@ -42,6 +42,6 @@ fn main() -> Result<()> {
         .add_systems(FixedUpdate, update_activity)
         .insert_resource(Time::from_seconds(60.))
         .run();
-    
+
     Ok(())
 }

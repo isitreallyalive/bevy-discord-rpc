@@ -1,6 +1,4 @@
-use std::{
-    time::{SystemTime, SystemTimeError, UNIX_EPOCH},
-};
+use std::time::{SystemTime, SystemTimeError, UNIX_EPOCH};
 
 use bevy::prelude::*;
 use discord_presence::models::{
