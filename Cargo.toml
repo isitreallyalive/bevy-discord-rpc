@@ -13,6 +13,9 @@ required-features = ["unstable_name"]
 [dependencies]
 bevy = { version = "0.17.3", default-features = false }
 bon = "3.8.1"
-discord-presence = "3.0.0"
+# my fork of discord-presence that fixes windows pipe disconnection issues
+# todo: replace with upstream once the pr gets merged
+# https://github.com/jewlexx/discord-presence/pull/151
+discord-presence = { git = "https://github.com/isitreallyalive/discord-presence", rev = "90e85b7" }
 pastey = "0.2.1"
 quork = "0.9.1"
