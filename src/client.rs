@@ -1,10 +1,10 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use bevy::{platform::sync::Mutex, prelude::*};
 use discord_presence::models::EventData;
 use quork::traits::list::ListVariants;
 
-use crate::RpcEvent;
+use crate::{Activity, RpcEvent};
 
 // todo: handle discord client shutdowns
 #[derive(Resource, Deref, DerefMut)]
@@ -14,20 +14,12 @@ pub(crate) struct Client {
     ready: bool,
 }
 
-#[derive(Resource, bon::Builder, Debug, Clone, Default)]
-#[non_exhaustive]
-pub struct Activity {
-    #[builder(into)]
-    pub state: String,
-}
-
 /// A queue of Discord events to be processed by Bevy
 // we need to do this because discord-presence runs event handlers on a separate thread unmanaged by bevy
 #[derive(Resource, Default, Deref, DerefMut)]
 pub(crate) struct EventQueue(Arc<Mutex<Vec<EventData>>>);
 
 impl Client {
-    /// Create a new Discord RPC client
     pub(crate) fn new(client_id: u64) -> Self {
         let client = discord_presence::Client::new(client_id);
         Self {
@@ -37,7 +29,6 @@ impl Client {
     }
 }
 
-/// Initialise the Discord RPC client
 pub(crate) fn startup(mut client: ResMut<Client>, event_queue: ResMut<EventQueue>) {
     // forward all events to bevy
     for event in discord_presence::Event::VARIANTS {
@@ -59,10 +50,14 @@ pub(crate) fn startup(mut client: ResMut<Client>, event_queue: ResMut<EventQueue
 pub(crate) fn apply_activity(
     mut client: ResMut<Client>,
     mut has_changed: Local<bool>,
-    activity: If<Res<Activity>>,
+    curr_activity: Res<Activity>,
 ) {
+    let Some(activity) = curr_activity.0.as_ref() else {
+        return;
+    };
+
     // we need to cache whether the activity has changed in case the client isn't ready yet
-    if activity.is_changed() {
+    if curr_activity.is_changed() {
         *has_changed = true;
     }
 
@@ -72,13 +67,22 @@ pub(crate) fn apply_activity(
     }
 
     let _ = client.set_activity(|mut a| {
-        a.state = Some(activity.state.to_string());
+        #[cfg(feature = "unstable_name")]
+        {
+            a.name = activity.name.clone();
+        }
+        a.state = activity.state.clone();
+        a.details = activity.details.clone();
+        a.timestamps = activity.timestamps.clone();
+        a.assets = activity.assets.clone();
+        a.party = activity.party.clone();
+        a.secrets = activity.secrets.clone();
+        a.instance = activity.instance;
         a
     });
     *has_changed = false;
 }
 
-/// Drain queued events into bevy
 pub(crate) fn drain_events(
     queue: Res<EventQueue>,
     mut writer: MessageWriter<RpcEvent>,
