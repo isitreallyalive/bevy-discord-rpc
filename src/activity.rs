@@ -32,7 +32,6 @@ impl From<Timestamps> for ActivityTimestamps {
 
 #[derive(bon::Builder, Clone, Debug, Default)]
 #[builder(on(String, into))]
-#[non_exhaustive]
 pub struct ActivityData {
     #[cfg(feature = "unstable_name")]
     pub name: Option<String>,

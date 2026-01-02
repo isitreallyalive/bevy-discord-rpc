@@ -14,7 +14,6 @@ mod activity;
 mod client;
 
 #[derive(bon::Builder)]
-#[non_exhaustive]
 pub struct DiscordRpcPlugin {
     #[builder(start_fn)]
     client_id: u64,
@@ -24,6 +23,7 @@ pub struct DiscordRpcPlugin {
 #[derive(Message, Debug)]
 pub struct RpcEvent {
     event: Event,
+    #[allow(dead_code)]
     data: EventData,
 }
 

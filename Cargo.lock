@@ -591,8 +591,9 @@ dependencies = [
 
 [[package]]
 name = "discord-presence"
-version = "3.0.0"
-source = "git+https://github.com/isitreallyalive/discord-presence?rev=90e85b7#90e85b7eca95f2c73452ff32cc1b78a95abdb5a5"
+version = "3.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afe4c987fda7ead915ca5024b42a4e5cd2bd9bd56ce6a81a87b3601b6a16d2c7"
 dependencies = [
  "byteorder",
  "bytes",
