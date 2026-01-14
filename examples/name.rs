@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_discord_rpc::{Activity, DiscordRpcPlugin};
+use bevy_discord_rpc::prelude::*;
 
 mod helpers;
 

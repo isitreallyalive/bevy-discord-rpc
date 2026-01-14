@@ -13,6 +13,11 @@ pub use activity::{Activity, Timestamps};
 mod activity;
 mod client;
 
+pub mod prelude {
+    pub use crate::{DiscordRpcPlugin, RpcEvent};
+    pub use crate::activity::{Activity, Timestamps};
+}
+
 #[derive(bon::Builder)]
 pub struct DiscordRpcPlugin {
     #[builder(start_fn)]
