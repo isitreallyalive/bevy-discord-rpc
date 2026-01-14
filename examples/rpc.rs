@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_discord_rpc::{Activity, DiscordRpcPlugin, RpcEvent, Timestamps};
 
+mod helpers;
+
 fn read_events(mut events: MessageReader<RpcEvent>) {
     for event in events.read() {
         println!("{:?}", event);
@@ -16,17 +18,10 @@ fn update_activity(mut activity: ResMut<Activity>, time: Res<Time>) {
 }
 
 fn main() -> Result<()> {
-    let client_id = std::env::var("APPLICATION_ID")
-        .map(|id| {
-            id.parse::<u64>()
-                .expect("Application ID must be a valid u64")
-        })
-        .expect("APPLICATION_ID must be set to a valid u64");
-
     App::new()
         .add_plugins(MinimalPlugins)
         .add_plugins(
-            DiscordRpcPlugin::builder(client_id)
+            DiscordRpcPlugin::builder(helpers::CLIENT_ID)
                 .activity(
                     Activity::builder()
                         .state("hello from bevy-discord-rpc")
